@@ -23,7 +23,6 @@ services:
     volumes:
     - ./db/data:/var/lib/mysql:cached
     - ./db/my.cnf:/etc/mysql/conf.d/my.cnf
-    - ./db/sql:/docker-entrypoint-initdb.d
     - ./logs/mysql:/var/log/mysql:cached
     ports:
     - ${MYSQL_PORT}
