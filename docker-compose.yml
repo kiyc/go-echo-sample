@@ -19,10 +19,11 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       TZ: ${MYSQL_TZ}
-    command: mysqld
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_bin
     volumes:
     - ./db/data:/var/lib/mysql:cached
     - ./db/my.cnf:/etc/mysql/conf.d/my.cnf
     - ./logs/mysql:/var/log/mysql:cached
+    - ./db/sql:/work
     ports:
     - ${MYSQL_PORT}
