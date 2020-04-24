@@ -1,0 +1,24 @@
+settings:
+  legacy:
+    force: false
+    interval: 0s
+schema:
+- name: go-echo-sample
+  path: /go/src
+  commands:
+    install:
+      status: true
+      method: go build -x -o /go/src/server
+    run:
+      status: true
+      method: /go/src/server
+  watcher:
+    extensions:
+    - go
+    paths:
+    - /
+    ignore:
+      paths:
+      - .git
+      - .realize
+      - vendor

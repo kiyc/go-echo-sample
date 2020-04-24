@@ -2,8 +2,12 @@ package main
 
 import (
   "net/http"
+  "os"
   "github.com/labstack/echo/v4"
   "github.com/labstack/echo/v4/middleware"
+  "github.com/jinzhu/gorm"
+  _ "github.com/jinzhu/gorm/dialects/mysql"
+  "github.com/joho/godotenv"
 )
 
 func main() {
@@ -28,8 +32,9 @@ func hello(c echo.Context) error {
 }
 
 type User struct {
-    Name  string `json:"name" form:"name"`
-    Email string `json:"email" form:"email"`
+  gorm.Model
+  Account string
+  Password string
 }
 
 type Users []User
@@ -37,14 +42,23 @@ type Users []User
 func userIndexHandler(c echo.Context) error {
   var users Users
 
-  users = append(users, User {
-    Name:  "Taro",
-    Email: "taro@example.com",
-  })
-  users = append(users, User {
-    Name:  "Jiro",
-    Email: "jiro@example.com",
-  })
+  err := godotenv.Load()
+  if err != nil {
+    panic("環境変数の読込に失敗しました")
+  }
+
+  dbHost := os.Getenv("MYSQL_HOST")
+  dbName := os.Getenv("MYSQL_DBNAME")
+  dbUser := os.Getenv("MYSQL_USER")
+  dbPass := os.Getenv("MYSQL_PASSWORD")
+
+  db, err := gorm.Open("mysql", dbUser + ":" + dbPass + "@tcp(" + dbHost + ":3306)/" + dbName + "?charset=utf8mb4&parseTime=True&loc=Local")
+  if err != nil {
+    panic("データベースへの接続に失敗しました")
+  }
+  defer db.Close()
+
+  db.Find(&users)
 
   return c.JSON(http.StatusOK, users)
 }

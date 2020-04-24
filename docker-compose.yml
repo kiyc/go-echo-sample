@@ -1,10 +1,29 @@
 version: '3'
 services:
-  goecho:
+  goecho-app:
     image: goecho
+    container_name: goecho-app
     build: .
     ports:
       - 8080:8080
     volumes:
       - ./src:/go/src
     tty: true
+    command: realize start --run
+  goecho-db:
+    image: ${MYSQL_IMAGE}
+    container_name: goecho-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DBNAME}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: ${MYSQL_TZ}
+    command: mysqld
+    volumes:
+    - ./db/data:/var/lib/mysql:cached
+    - ./db/my.cnf:/etc/mysql/conf.d/my.cnf
+    - ./db/sql:/docker-entrypoint-initdb.d
+    - ./logs/mysql:/var/log/mysql:cached
+    ports:
+    - ${MYSQL_PORT}
