@@ -30,6 +30,7 @@ func main() {
   api.GET("/users", userIndexHandler)
   api.POST("/users", userRegisterHandler)
   api.GET("/users/:id", userShowHandler)
+  api.PATCH("/users/:id", userUpdateHandler)
 
   // Start server
   e.Logger.Fatal(e.Start(":8080"))
@@ -144,6 +145,34 @@ func userShowHandler(c echo.Context) error {
   if result.Error != nil {
     return echo.ErrNotFound
   }
+
+  return c.JSON(http.StatusCreated, user)
+}
+
+func userUpdateHandler(c echo.Context) error {
+  var user User
+  id := c.Param("id")
+
+  db := dbConnect()
+  defer db.Close()
+
+  result := db.First(&user, id)
+
+  if result.Error != nil {
+    return echo.ErrNotFound
+  }
+
+  account := c.FormValue("account")
+  password := c.FormValue("password")
+
+  if len(account) > 0 {
+    user.Account = account
+  }
+  if len(password) > 0 {
+    user.Password = password
+  }
+
+  db.Save(&user)
 
   return c.JSON(http.StatusCreated, user)
 }
