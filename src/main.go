@@ -31,6 +31,7 @@ func main() {
   api.POST("/users", userRegisterHandler)
   api.GET("/users/:id", userShowHandler)
   api.PATCH("/users/:id", userUpdateHandler)
+  api.DELETE("/users/:id", userDeleteHandler)
 
   // Start server
   e.Logger.Fatal(e.Start(":8080"))
@@ -146,7 +147,7 @@ func userShowHandler(c echo.Context) error {
     return echo.ErrNotFound
   }
 
-  return c.JSON(http.StatusCreated, user)
+  return c.JSON(http.StatusOK, user)
 }
 
 func userUpdateHandler(c echo.Context) error {
@@ -174,5 +175,23 @@ func userUpdateHandler(c echo.Context) error {
 
   db.Save(&user)
 
-  return c.JSON(http.StatusCreated, user)
+  return c.JSON(http.StatusOK, user)
+}
+
+func userDeleteHandler(c echo.Context) error {
+  var user User
+  id := c.Param("id")
+
+  db := dbConnect()
+  defer db.Close()
+
+  result := db.First(&user, id)
+
+  if result.Error != nil {
+    return echo.ErrNotFound
+  }
+
+  db.Delete(&user)
+
+  return c.JSON(http.StatusOK, "Deleted.")
 }
