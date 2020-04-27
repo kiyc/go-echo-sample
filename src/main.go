@@ -28,6 +28,8 @@ func main() {
   api := e.Group("/api")
   api.Use(middleware.JWT([]byte("secret")))
   api.GET("/users", userIndexHandler)
+  api.POST("/users", userRegisterHandler)
+  api.GET("/users/:id", userShowHandler)
 
   // Start server
   e.Logger.Fatal(e.Start(":8080"))
@@ -128,4 +130,20 @@ func userLoginHandler(c echo.Context) error {
   return c.JSON(http.StatusOK, map[string]string{
     "token": t,
   })
+}
+
+func userShowHandler(c echo.Context) error {
+  var user User
+  id := c.Param("id")
+
+  db := dbConnect()
+  defer db.Close()
+
+  result := db.First(&user, id)
+
+  if result.Error != nil {
+    return echo.ErrNotFound
+  }
+
+  return c.JSON(http.StatusCreated, user)
 }
