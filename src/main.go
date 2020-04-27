@@ -3,11 +3,13 @@ package main
 import (
   "net/http"
   "os"
+  "time"
   "github.com/labstack/echo/v4"
   "github.com/labstack/echo/v4/middleware"
   "github.com/jinzhu/gorm"
   _ "github.com/jinzhu/gorm/dialects/mysql"
   "github.com/joho/godotenv"
+  "github.com/dgrijalva/jwt-go"
 )
 
 func main() {
@@ -20,9 +22,12 @@ func main() {
 
   // Routes
   e.GET("/", hello)
-  e.GET("/users", userIndexHandler)
   e.POST("/register", userRegisterHandler)
   e.POST("/login", userLoginHandler)
+
+  api := e.Group("/api")
+  api.Use(middleware.JWT([]byte("secret")))
+  api.GET("/users", userIndexHandler)
 
   // Start server
   e.Logger.Fatal(e.Start(":8080"))
@@ -42,12 +47,18 @@ type User struct {
 type Users []User
 
 func dbConnect() *gorm.DB {
+  err := godotenv.Load()
+  if err != nil {
+    panic(err.Error())
+  }
+
   dbHost := os.Getenv("MYSQL_HOST")
   dbName := os.Getenv("MYSQL_DBNAME")
   dbUser := os.Getenv("MYSQL_USER")
   dbPass := os.Getenv("MYSQL_PASSWORD")
+  dbPort := os.Getenv("MYSQL_PORT")
 
-  db, err := gorm.Open("mysql", dbUser + ":" + dbPass + "@tcp(" + dbHost + ":3306)/" + dbName + "?charset=utf8mb4&parseTime=True&loc=Local")
+  db, err := gorm.Open("mysql", dbUser + ":" + dbPass + "@tcp(" + dbHost + ":" + dbPort + ")/" + dbName + "?charset=utf8mb4&parseTime=True&loc=Local")
 
   if err != nil {
     panic(err.Error())
@@ -99,8 +110,22 @@ func userLoginHandler(c echo.Context) error {
   result := db.Where("account = ?", account).Where("password = ?", password).First(&user)
 
   if result.Error != nil {
-    return c.JSON(http.StatusForbidden, "403 forbidden")
-  } else {
-    return c.JSON(http.StatusOK, "Authenticated")
+    return echo.ErrUnauthorized
   }
+
+  token := jwt.New(jwt.SigningMethodHS256)
+
+  claims := token.Claims.(jwt.MapClaims)
+  claims["account"] = user.Account
+  claims["admin"] = true
+  claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+
+  t, err := token.SignedString([]byte("secret"))
+  if err != nil {
+    return err
+  }
+
+  return c.JSON(http.StatusOK, map[string]string{
+    "token": t,
+  })
 }
