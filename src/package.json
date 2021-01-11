@@ -1,0 +1,28 @@
+{
+  "name": "go-echo-sample",
+  "version": "0.0.1",
+  "description": "Go Echo Sample",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npm run development",
+    "development": "webpack --mode development --progress",
+    "watch": "npm run development -- --watch"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "axios": "^0.21.1",
+    "css-loader": "^5.0.1",
+    "dayjs": "^1.10.3",
+    "vue": "^2.6.12",
+    "vue-loader": "^15.9.6",
+    "vue-router": "^3.4.9",
+    "vue-style-loader": "^4.1.2",
+    "vue-template-compiler": "^2.6.12",
+    "vuetify": "^2.4.2",
+    "vuex": "^3.6.0",
+    "webpack": "^5.12.2",
+    "webpack-cli": "^4.3.1"
+  }
+}

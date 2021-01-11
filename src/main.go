@@ -4,6 +4,8 @@ import (
   "net/http"
   "os"
   "time"
+  "html/template"
+	"io"
   "github.com/labstack/echo/v4"
   "github.com/labstack/echo/v4/middleware"
   "github.com/jinzhu/gorm"
@@ -20,10 +22,25 @@ func main() {
   e.Use(middleware.Logger())
   e.Use(middleware.Recover())
 
+  renderer := &Template{
+    templates: template.Must(template.ParseGlob("views/*.html")),
+  }
+  e.Renderer = renderer
+
   // Routes
-  e.GET("/", hello)
+  e.Static("/js", "public/js")
+  e.GET("/", func(c echo.Context) error {
+    return c.Render(http.StatusOK, "index.html", map[string]interface{}{})
+  })
   e.POST("/register", userRegisterHandler)
   e.POST("/login", userLoginHandler)
+
+  e.GET("/dashboard", func(c echo.Context) error {
+    return c.Render(http.StatusOK, "index.html", map[string]interface{}{})
+  })
+  e.GET("/users", func(c echo.Context) error {
+    return c.Render(http.StatusOK, "index.html", map[string]interface{}{})
+  })
 
   api := e.Group("/api")
   api.Use(middleware.JWT([]byte("secret")))
@@ -42,6 +59,14 @@ func hello(c echo.Context) error {
   return c.String(http.StatusOK, "Hello, World!")
 }
 
+type Template struct {
+  templates *template.Template
+}
+
+func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+  return t.templates.ExecuteTemplate(w, name, data)
+}
+
 type User struct {
   gorm.Model
   Account string `form:"account"`
@@ -49,6 +74,8 @@ type User struct {
 }
 
 type Users []User
+
+type Errors map[string]string
 
 func dbConnect() *gorm.DB {
   err := godotenv.Load()
@@ -62,7 +89,7 @@ func dbConnect() *gorm.DB {
   dbPass := os.Getenv("MYSQL_PASSWORD")
   dbPort := os.Getenv("MYSQL_PORT")
 
-  db, err := gorm.Open("mysql", dbUser + ":" + dbPass + "@tcp(" + dbHost + ":" + dbPort + ")/" + dbName + "?charset=utf8mb4&parseTime=True&loc=Local")
+  db, err := gorm.Open("mysql", dbUser + ":" + dbPass + "@tcp(" + dbHost + ":" + dbPort + ")/" + dbName + "?charset=utf8mb4&parseTime=true&loc=Asia%2FTokyo")
 
   if err != nil {
     panic(err.Error())
@@ -92,6 +119,19 @@ func userRegisterHandler(c echo.Context) (err error) {
 
   if err = c.Bind(user); err != nil {
     panic(err.Error())
+  }
+
+  //var errors Errors
+  errors := make(Errors)
+
+  if len(user.Account) == 0 {
+    errors["Account"] = "Account is required."
+  }
+  if len(user.Password) == 0 {
+    errors["Password"] = "Password is required."
+  }
+  if len(errors) > 0 {
+    return c.JSON(422, errors)
   }
 
   db := dbConnect()
