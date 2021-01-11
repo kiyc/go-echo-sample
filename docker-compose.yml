@@ -9,7 +9,7 @@ services:
     volumes:
       - ./src:/go/src
     tty: true
-    command: realize start --run
+    #command: realize start --run
   goecho-db:
     image: ${MYSQL_IMAGE}
     container_name: goecho-db
