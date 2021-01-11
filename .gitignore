@@ -17,4 +17,5 @@
 .env
 src/.env
 src/server
+src/node_modules
 db/data/*
