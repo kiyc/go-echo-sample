@@ -10,7 +10,6 @@
   },
   "author": "",
   "license": "MIT",
-  "dependencies": {},
   "devDependencies": {
     "axios": "^0.21.1",
     "css-loader": "^5.0.1",
